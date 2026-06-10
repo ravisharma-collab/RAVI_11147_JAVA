@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Warehouse Grid Locator</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js for utilisation chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body data-theme="dark">
+
+  <!-- ══════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-left">
+      <span class="logo">🏭</span>
+      <div>
+        <h1 class="header-title">Smart Warehouse Grid Locator</h1>
+        <p class="header-subtitle">OOP · 2D Arrays · Core Java + JavaScript</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="status-badge" id="warehouseStatus">🟢 Online</span>
+      <button class="btn btn-icon" id="darkModeToggle" title="Toggle Dark / Light Mode">🌙</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════
+       STATISTICS CARDS
+  ══════════════════════════════════════════ -->
+  <section class="stats-section">
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div class="stat-info">
+        <span class="stat-label">Total Items</span>
+        <span class="stat-value" id="statTotalItems">0</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔒</div>
+      <div class="stat-info">
+        <span class="stat-label">Occupied Slots</span>
+        <span class="stat-value" id="statOccupied">0</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⬜</div>
+      <div class="stat-info">
+        <span class="stat-label">Empty Slots</span>
+        <span class="stat-value" id="statEmpty">25</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔢</div>
+      <div class="stat-info">
+        <span class="stat-label">Total Quantity</span>
+        <span class="stat-value" id="statQuantity">0</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-info">
+        <span class="stat-label">Occupancy</span>
+        <span class="stat-value" id="statOccupancy">0%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- LEFT PANEL -->
+    <aside class="left-panel">
+
+      <!-- ADD ITEM FORM -->
+      <div class="card">
+        <h2 class="card-title">➕ Add Item</h2>
+        <form id="addItemForm" novalidate>
+          <div class="form-group">
+            <label for="itemId">Item ID</label>
+            <input type="text" id="itemId" placeholder="e.g. I101" maxlength="10" required />
+          </div>
+          <div class="form-group">
+            <label for="itemName">Item Name</label>
+            <input type="text" id="itemName" placeholder="e.g. Laptop" maxlength="30" required />
+          </div>
+          <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" placeholder="e.g. 50" min="0" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="row">Row (0–4)</label>
+              <input type="number" id="row" min="0" max="4" placeholder="0" required />
+            </div>
+            <div class="form-group">
+              <label for="col">Column (0–4)</label>
+              <input type="number" id="col" min="0" max="4" placeholder="0" required />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Add to Warehouse</button>
+        </form>
+      </div>
+
+      <!-- SEARCH SECTION -->
+      <div class="card">
+        <h2 class="card-title">🔍 Search Item</h2>
+        <div class="form-group">
+          <label for="searchId">Search by Item ID</label>
+          <div class="input-row">
+            <input type="text" id="searchId" placeholder="e.g. I102" />
+            <button class="btn btn-secondary" onclick="searchById()">Search</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="searchName">Search by Name</label>
+          <div class="input-row">
+            <input type="text" id="searchName" placeholder="e.g. Laptop" />
+            <button class="btn btn-secondary" onclick="searchByName()">Search</button>
+          </div>
+        </div>
+        <!-- Result Box -->
+        <div id="searchResult" class="search-result hidden"></div>
+      </div>
+
+      <!-- UTILISATION CHART -->
+      <div class="card">
+        <h2 class="card-title">📊 Utilisation Chart</h2>
+        <canvas id="utilizationChart" height="200"></canvas>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT PANEL -->
+    <section class="right-panel">
+
+      <!-- GRID VISUALISATION -->
+      <div class="card">
+        <div class="grid-header">
+          <h2 class="card-title">🗺️ Warehouse Grid (5×5)</h2>
+          <div class="grid-actions">
+            <button class="btn btn-accent" onclick="exportReport()">📄 Export Report</button>
+            <button class="btn btn-outline" onclick="clearSearch()">✖ Clear Highlight</button>
+          </div>
+        </div>
+
+        <!-- Column labels -->
+        <div class="grid-wrapper">
+          <div class="grid-col-labels">
+            <span></span>
+            <span>Col 0</span><span>Col 1</span>
+            <span>Col 2</span><span>Col 3</span><span>Col 4</span>
+          </div>
+          <div id="warehouseGrid" class="warehouse-grid"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot occupied"></span> Occupied</span>
+          <span class="legend-item"><span class="legend-dot empty"></span> Empty</span>
+          <span class="legend-item"><span class="legend-dot highlighted"></span> Search Result</span>
+        </div>
+      </div>
+
+      <!-- RECENTLY ADDED / SEARCH HISTORY TABS -->
+      <div class="card">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('recent', this)">🕐 Recently Added</button>
+          <button class="tab" onclick="switchTab('history', this)">📋 Search History</button>
+          <button class="tab" onclick="switchTab('allItems', this)">📦 All Items</button>
+        </div>
+        <div id="tab-recent"   class="tab-content active"><ul id="recentList"  class="item-list"></ul></div>
+        <div id="tab-history"  class="tab-content"><ul id="historyList" class="item-list"></ul></div>
+        <div id="tab-allItems" class="tab-content">
+          <table id="allItemsTable" class="items-table">
+            <thead>
+              <tr><th>Item ID</th><th>Name</th><th>Quantity</th><th>Row</th><th>Col</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="allItemsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       UPDATE ITEM MODAL
+  ══════════════════════════════════════════ -->
+  <div id="modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h2 class="modal-title">✏️ Update Item</h2>
+      <p id="modalItemInfo" class="modal-info"></p>
+      <div class="form-group">
+        <label for="newQuantity">New Quantity</label>
+        <input type="number" id="newQuantity" min="0" placeholder="Enter new quantity" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="confirmUpdate()">Update</button>
+        <button class="btn btn-danger"  onclick="confirmRemove()">🗑 Remove Item</button>
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       TOAST NOTIFICATION
+  ══════════════════════════════════════════ -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
